@@ -352,9 +352,205 @@ function toggleMatrix() {
 }
 
 // ========= GLITCH EFFECT =========
+let glitchRunning = false;
+
 function triggerGlitch() {
+    if (glitchRunning) return;
+    glitchRunning = true;
+
+    // Create glitch canvas
+    let glitchCanvas = document.getElementById('glitch-canvas');
+    if (glitchCanvas) glitchCanvas.remove();
+    glitchCanvas = document.createElement('canvas');
+    glitchCanvas.id = 'glitch-canvas';
+    document.body.appendChild(glitchCanvas);
+
+    glitchCanvas.width = window.innerWidth;
+    glitchCanvas.height = window.innerHeight;
+    const ctx = glitchCanvas.getContext('2d');
+    const W = glitchCanvas.width;
+    const H = glitchCanvas.height;
+
+    const glitchDuration = 900;
+    const startTime = Date.now();
+    let frameCount = 0;
+
+    // Capture current page as image for slice displacement
+    const mainEl = document.getElementById('main-content');
+
+    function drawGlitch() {
+        const elapsed = Date.now() - startTime;
+        if (elapsed > glitchDuration) {
+            ctx.clearRect(0, 0, W, H);
+            glitchCanvas.remove();
+            glitchRunning = false;
+            return;
+        }
+
+        frameCount++;
+        const intensity = Math.sin((elapsed / glitchDuration) * Math.PI);
+
+        // Clear previous frame
+        ctx.clearRect(0, 0, W, H);
+
+        // === LAYER 1: Horizontal slice displacement ===
+        const sliceCount = Math.floor(intensity * 30) + 5;
+        for (let i = 0; i < sliceCount; i++) {
+            const y = Math.random() * H;
+            const sliceH = Math.random() * 40 + 2;
+            const offsetX = (Math.random() - 0.5) * intensity * 60;
+            // Red channel slice
+            ctx.fillStyle = `rgba(255, 0, 0, ${0.08 + intensity * 0.12})`;
+            ctx.fillRect(offsetX - 5, y, W + 10, sliceH);
+            // Cyan channel slice (opposite direction)
+            ctx.fillStyle = `rgba(0, 255, 255, ${0.06 + intensity * 0.1})`;
+            ctx.fillRect(-offsetX - 3, y + 2, W + 6, sliceH * 0.7);
+        }
+
+        // === LAYER 2: RGB split blocks ===
+        const blockCount = Math.floor(intensity * 20) + 3;
+        for (let i = 0; i < blockCount; i++) {
+            const bx = Math.random() * W;
+            const by = Math.random() * H;
+            const bw = Math.random() * 300 + 30;
+            const bh = Math.random() * 80 + 10;
+            const shift = (Math.random() - 0.5) * intensity * 30;
+
+            // Red
+            ctx.fillStyle = `rgba(255, 0, 0, ${0.15 + Math.random() * 0.15})`;
+            ctx.fillRect(bx + shift, by, bw, bh);
+            // Green
+            ctx.fillStyle = `rgba(0, 255, 0, ${0.12 + Math.random() * 0.12})`;
+            ctx.fillRect(bx - shift * 0.7, by + 2, bw, bh);
+            // Blue
+            ctx.fillStyle = `rgba(0, 0, 255, ${0.12 + Math.random() * 0.12})`;
+            ctx.fillRect(bx + shift * 0.4, by - 2, bw, bh);
+        }
+
+        // === LAYER 3: Noise scanlines ===
+        for (let y = 0; y < H; y += 3) {
+            if (Math.random() < intensity * 0.3) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.08})`;
+                ctx.fillRect(0, y, W, 1);
+            }
+        }
+
+        // === LAYER 4: Corruption blocks (pixel artifacts) ===
+        if (Math.random() < intensity * 0.6) {
+            const artCount = Math.floor(Math.random() * 6) + 1;
+            for (let i = 0; i < artCount; i++) {
+                const ax = Math.random() * W;
+                const ay = Math.random() * H;
+                const aw = Math.random() * 120 + 20;
+                const ah = Math.random() * 60 + 5;
+                const colors = ['#ff0044', '#00ff88', '#0088ff', '#ff00ff', '#ffff00'];
+                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.globalAlpha = 0.15 + Math.random() * 0.2;
+                ctx.fillRect(ax, ay, aw, ah);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // === LAYER 5: White flash on peaks ===
+        if (Math.random() < intensity * 0.15) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.15})`;
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        // === LAYER 6: Black bars (signal loss) ===
+        if (Math.random() < intensity * 0.2) {
+            const barY = Math.random() * H;
+            const barH = Math.random() * 80 + 20;
+            ctx.fillStyle = `rgba(0, 0, 0, ${0.5 + Math.random() * 0.4})`;
+            ctx.fillRect(0, barY, W, barH);
+        }
+
+        // === LAYER 7: Diagonal interference ===
+        if (frameCount % 3 === 0) {
+            for (let i = 0; i < 4; i++) {
+                const lx = Math.random() * W;
+                ctx.strokeStyle = `rgba(255, 0, 255, ${0.1 + intensity * 0.15})`;
+                ctx.lineWidth = Math.random() * 4 + 1;
+                ctx.beginPath();
+                ctx.moveTo(lx, 0);
+                ctx.lineTo(lx + (Math.random() - 0.5) * 200, H);
+                ctx.stroke();
+            }
+        }
+
+        // === LAYER 8: Text artifacts ===
+        if (Math.random() < intensity * 0.25) {
+            const glitchTexts = ['ERROR', 'FATAL', '0xDEAD', 'CORRUPT', '???', 'NULL', 'BREACH', '////'];
+            ctx.font = `${Math.floor(Math.random() * 30 + 12)}px monospace`;
+            ctx.fillStyle = `rgba(${Math.random() > 0.5 ? '255,0,0' : '0,255,0'}, ${0.3 + Math.random() * 0.4})`;
+            ctx.fillText(
+                glitchTexts[Math.floor(Math.random() * glitchTexts.length)],
+                Math.random() * W,
+                Math.random() * H
+            );
+        }
+
+        requestAnimationFrame(drawGlitch);
+    }
+
+    // CSS glitch animation
+    document.body.classList.remove('glitch-active');
+    void document.body.offsetWidth; // force reflow
     document.body.classList.add('glitch-active');
-    setTimeout(() => document.body.classList.remove('glitch-active'), 900);
+    drawGlitch();
+    playGlitchSound();
+
+    setTimeout(() => document.body.classList.remove('glitch-active'), glitchDuration);
+}
+
+// Glitch sound effect
+function playGlitchSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+
+        // Harsh noise bursts
+        for (let i = 0; i < 6; i++) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            filter.type = 'bandpass';
+            filter.frequency.value = Math.random() * 2000 + 500;
+            filter.Q.value = Math.random() * 10 + 1;
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.frequency.setValueAtTime(Math.random() * 1200 + 100, now + i * 0.05);
+            osc.type = ['square', 'sawtooth', 'triangle'][Math.floor(Math.random() * 3)];
+            gain.gain.setValueAtTime(0.06, now + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.15);
+
+            osc.start(now + i * 0.05);
+            osc.stop(now + i * 0.05 + 0.15);
+        }
+
+        // Static noise
+        const bufferSize = audioCtx.sampleRate * 0.3;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.3;
+        }
+        const noise = audioCtx.createBufferSource();
+        const noiseGain = audioCtx.createGain();
+        noise.buffer = noiseBuffer;
+        noise.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+        noiseGain.gain.setValueAtTime(0.04, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        noise.start(now);
+        noise.stop(now + 0.3);
+    } catch(e) {
+        // Audio context not available
+    }
 }
 
 // ========= NOTIFICATION =========
