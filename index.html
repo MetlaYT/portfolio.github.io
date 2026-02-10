@@ -8,6 +8,9 @@
 </head>
 <body>
 
+    <div id="scanline-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
+
     <div id="terminal-loader">
         <div class="win-window loader-window">
             <div class="win-header">
@@ -24,24 +27,71 @@
                 <span class="win-icon">💻</span>
                 <span class="win-title">Metla Project Manager v2.0.26</span>
                 <div class="win-controls">
-                    <span class="win-btn">_</span>
-                    <span class="win-btn">▢</span>
-                    <span class="win-btn close">×</span>
+                    <span class="win-btn minimize-btn" title="Minimize">_</span>
+                    <span class="win-btn maximize-btn" title="Maximize">▢</span>
+                    <span class="win-btn close" title="Close">×</span>
                 </div>
             </div>
             
             <nav class="win-menu">
-                <div class="menu-item">File</div>
-                <div class="menu-item">Edit</div>
-                <div class="menu-item">View</div>
-                <div class="menu-item">Terminal</div>
+                <div class="menu-item" data-menu="file">
+                    File
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-action="new-window">New Window</div>
+                        <div class="dropdown-item" data-action="open-terminal">Open Terminal</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="refresh">Refresh Page</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="exit">Exit</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-menu="edit">
+                    Edit
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-action="clear-console">Clear Console</div>
+                        <div class="dropdown-item" data-action="reset-projects">Reset Projects View</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="toggle-scanlines">Toggle Scanlines</div>
+                        <div class="dropdown-item" data-action="toggle-particles">Toggle Particles</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-menu="view">
+                    View
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-action="view-grid">Grid Layout</div>
+                        <div class="dropdown-item" data-action="view-list">List Layout</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="zoom-in">Zoom In</div>
+                        <div class="dropdown-item" data-action="zoom-out">Zoom Out</div>
+                        <div class="dropdown-item" data-action="zoom-reset">Reset Zoom</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="fullscreen">Toggle Fullscreen</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-menu="terminal">
+                    Terminal
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-action="cmd-help">Help</div>
+                        <div class="dropdown-item" data-action="cmd-list">List Projects</div>
+                        <div class="dropdown-item" data-action="cmd-status">System Status</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" data-action="cmd-matrix">Matrix Mode</div>
+                        <div class="dropdown-item" data-action="cmd-glitch">Glitch Effect</div>
+                    </div>
+                </div>
                 <a href="https://metlayt.github.io/" class="menu-home">ROOT_ACCESS</a>
             </nav>
 
-            <main class="win-content">
+            <main class="win-content" id="win-content">
                 <section class="hero-cmd">
-                    <p class="dir-path">C:\Users\Metla\Portfolio> list --all --visual</p>
+                    <p class="dir-path glitch-text" data-text="C:\Users\Metla\Portfolio> list --all --visual">C:\Users\Metla\Portfolio> list --all --visual</p>
                     <h1 class="dir-header">Index of DEVELOPER_ARCHIVE (2026)</h1>
+                    <div class="system-stats">
+                        <span class="stat-item"><span class="stat-dot active-dot"></span> Active: <span id="active-count">0</span></span>
+                        <span class="stat-item"><span class="stat-dot frozen-dot"></span> Frozen: <span id="frozen-count">0</span></span>
+                        <span class="stat-item"><span class="stat-dot error-dot"></span> Cancelled: <span id="cancelled-count">0</span></span>
+                        <span class="stat-item"><span class="stat-dot classified-dot"></span> Classified: <span id="classified-count">0</span></span>
+                    </div>
                 </section>
 
                 <div class="projects-container" id="projects-container">
@@ -59,6 +109,10 @@
                 </div>
             </main>
         </div>
+    </div>
+
+    <div id="notification" class="notification hidden">
+        <span id="notification-text"></span>
     </div>
 
     <script src="script.js"></script>
